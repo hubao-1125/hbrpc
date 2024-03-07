@@ -20,31 +20,37 @@ public class ProviderBootstrap implements ApplicationContextAware {
 
     private Map<String, Object> skeleton = new HashMap<>();
 
+    // 启动项目初始化实现类
     @PostConstruct
     public void buildProviders() {
+
+        // 获取使用@HbProvider注解的类数据
         Map<String, Object> providers = applicationContext.getBeansWithAnnotation(HbProvider.class);
 
         providers.forEach((k, v) -> System.out.println(k));
-        providers.values().forEach(i -> getInterface(i));
+        // 循环处理
+        providers.values().forEach(this::getInterface);
 
     }
 
     private void getInterface(Object i) {
 
+        // 获取数据，补充到全局 Map
         Class<?> anInterface = i.getClass().getInterfaces()[0];
         skeleton.put(anInterface.getCanonicalName(), i);
     }
 
     public RpcResponse invoke(RpcRequest request) {
 
+        // 根据 rpcRequest获取对应实现类
         Object bean = skeleton.get(request.getService());
         try {
+            // 获取方法
             Method method = findMethod(bean.getClass(), request.getMethod());
+            // 反射
             Object result = method.invoke(bean, request.getArgs());
             return new RpcResponse(true, result);
-        } catch (InvocationTargetException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException e) {
+        } catch (InvocationTargetException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }
