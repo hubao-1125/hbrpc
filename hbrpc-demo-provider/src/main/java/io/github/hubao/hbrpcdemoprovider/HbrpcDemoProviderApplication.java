@@ -30,7 +30,6 @@ public class HbrpcDemoProviderApplication {
 
     @RequestMapping("/")
     public RpcResponse invoke(@RequestBody RpcRequest request) {
-
         return providerBootstrap.invoke(request);
     }
 
