@@ -24,6 +24,7 @@
         <module>hbrpc-core</module>
         <module>hbrpc-demo-api</module>
         <module>hbrpc-demo-provider</module>
+        <module>hbrpc-demo-consumer</module>
     </modules>
 
     <dependencies>

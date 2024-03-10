@@ -18,4 +18,6 @@ public class RpcResponse<T> {
      * 返回数据
      */
     T data;
+
+    Exception ex;
 }
