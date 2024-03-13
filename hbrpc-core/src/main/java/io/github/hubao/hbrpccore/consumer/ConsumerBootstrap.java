@@ -18,51 +18,63 @@ public class ConsumerBootstrap implements ApplicationContextAware {
 
     public void start() {
         String[] names = applicationContext.getBeanDefinitionNames();
+        long start = System.currentTimeMillis();
         for (String name : names) {
             Object bean = applicationContext.getBean(name);
-            List<Field> fields = findAnnotationField(bean.getClass());
 
-            fields.stream().forEach(i->{
+            // 优化点1：过滤去掉spring/jdk/其他框架本身的bean的反射扫描 TODO 1
+            String packageName = bean.getClass().getPackageName();
+            if (packageName.startsWith("org.springframework") ||
+                    packageName.startsWith("java.") ||
+                    packageName.startsWith("javax.") ||
+                    packageName.startsWith("jdk.") ||
+                    packageName.startsWith("com.fasterxml.") ||
+                    packageName.startsWith("com.sun.") ||
+                    packageName.startsWith("jakarta.") ||
+                    packageName.startsWith("org.apache") ) {
+                continue;  // 这段逻辑可以降低一半启动速度 300ms->160ms
+            }
+            System.out.println(packageName + " package bean => " + name);
 
+            List<Field> fields = findAnnotatedField(bean.getClass());
+
+            fields.stream().forEach( f -> {
+                System.out.println(" ===> " + f.getName());
                 try {
-                    Class<?> service = i.getType();
+                    Class<?> service = f.getType();
                     String serviceName = service.getCanonicalName();
                     Object consumer = stub.get(serviceName);
-                    if (Objects.isNull(consumer)) {
+                    if (consumer == null) {
                         consumer = createConsumer(service);
                     }
-
-                    i.setAccessible(true);
-                    i.set(bean, consumer);
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
+                    f.setAccessible(true);
+                    f.set(bean, consumer);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
                 }
             });
 
         }
+        System.out.println("create consumer take " + (System.currentTimeMillis()-start) + " ms");
     }
 
     private Object createConsumer(Class<?> service) {
-
         return Proxy.newProxyInstance(service.getClassLoader(),
-        new Class[]{service}, new HbInvocationHandler(service));
+                new Class[]{service}, new HbInvocationHandler(service));
     }
 
-    private List<Field> findAnnotationField(Class<?> aClass) {
-
+    private List<Field> findAnnotatedField(Class<?> aClass) {
         List<Field> result = new ArrayList<>();
-
         while (aClass != null) {
             Field[] fields = aClass.getDeclaredFields();
-            for (Field field : fields) {
-                if (field.isAnnotationPresent(HbConsumer.class)) {
-                    result.add(field);
+            for (Field f : fields) {
+                if (f.isAnnotationPresent(HbConsumer.class)) {
+                    result.add(f);
                 }
             }
             aClass = aClass.getSuperclass();
         }
-
-
         return result;
     }
+
 }

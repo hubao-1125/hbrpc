@@ -3,6 +3,7 @@ package io.github.hubao.hbrpccore.provider;
 import io.github.hubao.hbrpccore.annotation.HbProvider;
 import io.github.hubao.hbrpccore.api.RpcRequest;
 import io.github.hubao.hbrpccore.api.RpcResponse;
+import io.github.hubao.hbrpccore.util.MethodUtils;
 import jakarta.annotation.PostConstruct;
 import lombok.Data;
 import org.springframework.context.ApplicationContext;
@@ -20,44 +21,50 @@ public class ProviderBootstrap implements ApplicationContextAware {
 
     private Map<String, Object> skeleton = new HashMap<>();
 
-    @PostConstruct
+    @PostConstruct  // init-method
     public void buildProviders() {
         Map<String, Object> providers = applicationContext.getBeansWithAnnotation(HbProvider.class);
+        providers.forEach((x,y) -> System.out.println(x));
+//        skeleton.putAll(providers);
 
-        providers.forEach((k, v) -> System.out.println(k));
-        providers.values().forEach(i -> getInterface(i));
+        providers.values().forEach(
+                x -> genInterface(x)
+        );
 
     }
 
-    private void getInterface(Object i) {
-
-        Class<?> anInterface = i.getClass().getInterfaces()[0];
-        skeleton.put(anInterface.getCanonicalName(), i);
+    private void genInterface(Object x) {
+        Class<?> itfer = x.getClass().getInterfaces()[0];
+        skeleton.put(itfer.getCanonicalName(), x);
     }
+
 
     public RpcResponse invoke(RpcRequest request) {
 
-        RpcResponse rpcResponse = new RpcResponse();
+        String methodName = request.getMethod();
+        if (MethodUtils.checkLocalMethod(methodName)) {
+            return null;
+        }
 
+        RpcResponse rpcResponse = new RpcResponse();
         Object bean = skeleton.get(request.getService());
         try {
             Method method = findMethod(bean.getClass(), request.getMethod());
             Object result = method.invoke(bean, request.getArgs());
             rpcResponse.setStatus(true);
-            rpcResponse.setData(request);
+            rpcResponse.setData(result);
             return rpcResponse;
-        } catch (Exception e) {
-            rpcResponse.setEx(e);
+        } catch (InvocationTargetException e) {
+            rpcResponse.setEx(new RuntimeException(e.getTargetException().getMessage()));
+        } catch (IllegalAccessException e) {
+            rpcResponse.setEx(new RuntimeException(e.getMessage()));
         }
-        rpcResponse.setStatus(false);
         return rpcResponse;
     }
 
     private Method findMethod(Class<?> aClass, String methodName) {
-
-        Method[] methods = aClass.getMethods();
-        for (Method method : methods) {
-            if (method.getName().equals(methodName)) {
+        for (Method method : aClass.getMethods()) {
+            if(method.getName().equals(methodName)) {  // 有多个重名方法，
                 return method;
             }
         }

@@ -24,9 +24,24 @@ public class HbrpcDemoConsumerApplication {
 
     @Bean
     public ApplicationRunner consumer_runner() {
-        return d -> {
-            User user = userService.findById(1);
-            System.out.println(user);
+        return x -> {
+//            User user = userService.findById(1);
+//            System.out.println("RPC result userService.findById(1) = " + user);
+
+//            System.out.println(userService.toString());
+//
+//            System.out.println(userService.getId(11));
+
+            System.out.println(userService.getName());
+
+            //Order order = orderService.findById(2);
+            //System.out.println("RPC result orderService.findById(2) = " + order);
+
+            //demo2.test();
+
+//            Order order404 = orderService.findById(404);
+//            System.out.println("RPC result orderService.findById(2) = " + order404);
+
         };
     }
 }

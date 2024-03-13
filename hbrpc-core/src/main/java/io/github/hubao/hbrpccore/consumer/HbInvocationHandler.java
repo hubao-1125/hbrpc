@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import io.github.hubao.hbrpccore.api.RpcRequest;
 import io.github.hubao.hbrpccore.api.RpcResponse;
+import io.github.hubao.hbrpccore.util.MethodUtils;
 import okhttp3.*;
 
 import java.io.IOException;
@@ -13,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 public class HbInvocationHandler implements InvocationHandler {
 
-    final static MediaType JSON_TYPE = MediaType.get("application/json; charset=utf-8");
+    final static MediaType JSONTYPE = MediaType.get("application/json; charset=utf-8");
 
     Class<?> service;
 
@@ -21,9 +22,12 @@ public class HbInvocationHandler implements InvocationHandler {
         this.service = clazz;
     }
 
-
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+
+        if (MethodUtils.checkLocalMethod(method.getName())) {
+            return null;
+        }
 
         RpcRequest rpcRequest = new RpcRequest();
         rpcRequest.setService(service.getCanonicalName());
@@ -32,14 +36,18 @@ public class HbInvocationHandler implements InvocationHandler {
 
         RpcResponse rpcResponse = post(rpcRequest);
 
-        if (rpcResponse.isStatus()) {
-            JSONObject jsonObject = (JSONObject) rpcResponse.getData();
-            return jsonObject.toJavaObject(method.getReturnType());
-        } else {
+        if(rpcResponse.isStatus()) {
+            Object data = rpcResponse.getData();
+            if(data instanceof JSONObject jsonResult) {
+                return jsonResult.toJavaObject(method.getReturnType());
+            } else {
+                return data;
+            }
+        }else {
             Exception ex = rpcResponse.getEx();
-            throw ex;
+            //ex.printStackTrace();
+            throw new RuntimeException(ex);
         }
-
     }
 
     OkHttpClient client = new OkHttpClient.Builder()
@@ -50,20 +58,20 @@ public class HbInvocationHandler implements InvocationHandler {
             .build();
 
     private RpcResponse post(RpcRequest rpcRequest) {
-
-        String req = JSON.toJSONString(rpcRequest);
+        String reqJson = JSON.toJSONString(rpcRequest);
+        System.out.println(" ===> reqJson = " + reqJson);
         Request request = new Request.Builder()
                 .url("http://localhost:8080/")
-                .post(RequestBody.create(req, JSON_TYPE))
+                .post(RequestBody.create(reqJson, JSONTYPE))
                 .build();
-
         try {
-            String resJson = client.newCall(request).execute().body().string();
-            RpcResponse rpcResponse = JSON.parseObject(resJson, RpcResponse.class);
+            String respJson = client.newCall(request).execute().body().string();
+            System.out.println(" ===> respJson = " + respJson);
+            RpcResponse rpcResponse = JSON.parseObject(respJson, RpcResponse.class);
             return rpcResponse;
         } catch (IOException e) {
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
-
     }
 }
