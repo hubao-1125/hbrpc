@@ -19,14 +19,14 @@ import org.springframework.web.bind.annotation.RestController;
 @Import(ProviderConfig.class)
 public class HbrpcDemoProviderApplication {
 
-    @Autowired
-    private ProviderBootstrap providerBootstrap;
-
-
     public static void main(String[] args) {
         SpringApplication.run(HbrpcDemoProviderApplication.class, args);
     }
 
+    // 使用HTTP + JSON 来实现序列化和通信
+
+    @Autowired
+    ProviderBootstrap providerBootstrap;
 
     @RequestMapping("/")
     public RpcResponse invoke(@RequestBody RpcRequest request) {
@@ -37,12 +37,26 @@ public class HbrpcDemoProviderApplication {
     @Bean
     ApplicationRunner providerRun() {
         return x -> {
-            RpcRequest request = new RpcRequest();
-            request.setService("io.github.hubao.hbrpcdemoapi.UserService");
-            request.setMethod("findById");
-            request.setArgs(new Object[]{100});
-            RpcResponse rpcResponse = invoke(request);
-            System.out.println("return:" + rpcResponse.getData());
+//            // test 1 parameter method
+//            RpcRequest request = new RpcRequest();
+//            request.setService("cn.kimmking.kkrpc.demo.api.UserService");
+//            request.setMethodSign("findById@1_int");
+//            request.setArgs(new Object[]{100});
+//
+//            RpcResponse rpcResponse = invoke(request);
+//            System.out.println("return : "+rpcResponse.getData());
+//
+//            // test 2 parameters method
+//            RpcRequest request1 = new RpcRequest();
+//            request1.setService("cn.kimmking.kkrpc.demo.api.UserService");
+//            request1.setMethodSign("findById@2_int_java.lang.String");
+//            request1.setArgs(new Object[]{100, "CC"});
+//
+//            RpcResponse rpcResponse1 = invoke(request1);
+//            System.out.println("return : "+rpcResponse1.getData());
+
         };
     }
+
+
 }

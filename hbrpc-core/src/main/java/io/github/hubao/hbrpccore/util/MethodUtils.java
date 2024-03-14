@@ -1,6 +1,7 @@
 package io.github.hubao.hbrpccore.util;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 /**
  * Description for this class.
@@ -10,24 +11,37 @@ import java.lang.reflect.Method;
  */
 public class MethodUtils {
 
-    public static boolean checkLocalMethod(final String methodName) {
+    public static boolean checkLocalMethod(final String method) {
         //本地方法不代理
-        if ("toString".equals(methodName) ||
-                "hashCode".equals(methodName) ||
-                "notifyAll".equals(methodName) ||
-                "equals".equals(methodName) ||
-                "wait".equals(methodName) ||
-                "getClass".equals(methodName) ||
-                "notify".equals(methodName)) {
+        if ("toString".equals(method) ||
+                "hashCode".equals(method) ||
+                "notifyAll".equals(method) ||
+                "equals".equals(method) ||
+                "wait".equals(method) ||
+                "getClass".equals(method) ||
+                "notify".equals(method)) {
             return true;
         }
         return false;
     }
 
-
-    // 等价上面的
     public static boolean checkLocalMethod(final Method method) {
         return method.getDeclaringClass().equals(Object.class);
+    }
+
+    public static String methodSign(Method method) {
+        StringBuilder sb = new StringBuilder(method.getName());
+        sb.append("@").append(method.getParameterCount());
+        Arrays.stream(method.getParameterTypes()).forEach(
+                c -> sb.append("_").append(c.getCanonicalName())
+        );
+        return sb.toString();
+    }
+
+    public static void main(String[] args) {
+        Arrays.stream(MethodUtils.class.getMethods()).forEach(
+                m -> System.out.println(methodSign(m))
+        );
     }
 
 }
