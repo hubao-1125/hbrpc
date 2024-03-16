@@ -9,8 +9,12 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication
+@RestController
 @Import({ConsumerConfig.class})
 public class HbrpcDemoConsumerApplication {
 
@@ -21,6 +25,11 @@ public class HbrpcDemoConsumerApplication {
         SpringApplication.run(HbrpcDemoConsumerApplication.class, args);
     }
 
+
+    @RequestMapping("/")
+    public User findById(@RequestParam int id) {
+        return userService.findById(id);
+    }
 
     @Bean
     public ApplicationRunner consumer_runner() {

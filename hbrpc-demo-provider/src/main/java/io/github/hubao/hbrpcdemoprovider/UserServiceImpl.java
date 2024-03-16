@@ -3,14 +3,22 @@ package io.github.hubao.hbrpcdemoprovider;
 import io.github.hubao.hbrpccore.annotation.HbProvider;
 import io.github.hubao.hbrpcdemoapi.User;
 import io.github.hubao.hbrpcdemoapi.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 @Component
 @HbProvider
 public class UserServiceImpl implements UserService {
+
+    @Autowired
+    Environment environment;
+
+
+
     @Override
     public User findById(int id) {
-        return new User(id, "KK-" + System.currentTimeMillis());
+        return new User(id, "KK-" + environment.getProperty("server.port") + "_" + System.currentTimeMillis());
     }
 
     @Override

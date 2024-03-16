@@ -1,8 +1,12 @@
 package io.github.hubao.hbrpccore.api;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Data
+@Getter
+@Setter
 public class RpcRequest {
 
     /**

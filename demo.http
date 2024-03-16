@@ -1,0 +1,32 @@
+GET http://localhost:8088/?id=191
+
+
+### 获取用户信息
+POST http://localhost:8082/
+Content-Type: application/json
+
+{
+  "service": "io.github.hubao.hbrpcdemoapi.UserService",
+  "methodSign": "findById@1_int",
+  "args": [100]
+}
+
+### 获取订单信息
+POST http://localhost:8080/
+Content-Type: application/json
+
+{
+  "service": "cn.kimmking.kkrpc.demo.api.OrderService",
+  "methodSign": "findById@1_int",
+  "args": [200]
+}
+
+### mock
+POST http://localhost:8080/
+Content-Type: application/json
+
+{
+  "service": "cn.kimmking.kkrpc.demo.api.UserService",
+  "methodSign": "findById@2_int_java.lang.String",
+  "args": [100, "CC"]
+}

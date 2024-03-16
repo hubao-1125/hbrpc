@@ -3,8 +3,7 @@ package io.github.hubao.hbrpccore.consumer;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import io.github.hubao.hbrpccore.api.RpcRequest;
-import io.github.hubao.hbrpccore.api.RpcResponse;
+import io.github.hubao.hbrpccore.api.*;
 import io.github.hubao.hbrpccore.util.MethodUtils;
 import io.github.hubao.hbrpccore.util.TypeUtils;
 import okhttp3.*;
@@ -13,6 +12,7 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class HbInvocationHandler implements InvocationHandler {
@@ -21,8 +21,13 @@ public class HbInvocationHandler implements InvocationHandler {
 
     Class<?> service;
 
-    public HbInvocationHandler(Class<?> clazz) {
+    RpcContext rpcContext;
+    List<String> providers;
+
+    public HbInvocationHandler(Class<?> clazz, RpcContext rpcContext, List<String> providers) {
         this.service = clazz;
+        this.rpcContext = rpcContext;
+        this.providers = providers;
     }
 
     @Override
@@ -37,7 +42,11 @@ public class HbInvocationHandler implements InvocationHandler {
         rpcRequest.setMethodSign(MethodUtils.methodSign(method));
         rpcRequest.setArgs(args);
 
-        RpcResponse rpcResponse = post(rpcRequest);
+        List<String> route = rpcContext.getRouter().route(this.providers);
+        String url = (String) rpcContext.getLoadBalancer().choose(route);
+        System.out.println("loadBalancer.choose(route) ==>" + url);
+
+        RpcResponse rpcResponse = post(rpcRequest, url);
 
         if(rpcResponse.isStatus()) {
             Object data = rpcResponse.getData();
@@ -68,11 +77,11 @@ public class HbInvocationHandler implements InvocationHandler {
             .connectTimeout(1, TimeUnit.SECONDS)
             .build();
 
-    private RpcResponse post(RpcRequest rpcRequest) {
+    private RpcResponse post(RpcRequest rpcRequest, String url) {
         String reqJson = JSON.toJSONString(rpcRequest);
         System.out.println(" ===> reqJson = " + reqJson);
         Request request = new Request.Builder()
-                .url("http://localhost:8080/")
+                .url(url)
                 .post(RequestBody.create(reqJson, JSONTYPE))
                 .build();
         try {
