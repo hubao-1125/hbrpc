@@ -1,7 +1,9 @@
 package io.github.hubao.hbrpcdemoprovider;
 
+import io.github.hubao.hbrpccore.annotation.HbProvider;
 import io.github.hubao.hbrpcdemoapi.Order;
 import io.github.hubao.hbrpcdemoapi.OrderService;
+import org.springframework.stereotype.Component;
 
 /**
  * 功能描述: -类
@@ -9,6 +11,8 @@ import io.github.hubao.hbrpcdemoapi.OrderService;
  * @author hubao
  * @Date: 2024/3/14$ 15:39$
  */
+@Component
+@HbProvider
 public class OrderServiceImpl implements OrderService {
     @Override
     public Order findById(Integer id) {
