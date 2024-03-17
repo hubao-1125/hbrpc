@@ -5,6 +5,7 @@ import io.github.hubao.hbrpccore.api.RegistryCenter;
 import io.github.hubao.hbrpccore.api.Router;
 import io.github.hubao.hbrpccore.cluster.RandomLoadBalancer;
 import io.github.hubao.hbrpccore.cluster.RoundRibonLoadBalancer;
+import io.github.hubao.hbrpccore.registry.ZkRegistryCenter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
@@ -48,7 +49,7 @@ public class ConsumerConfig {
 
     @Bean(initMethod = "start", destroyMethod = "stop")
     public RegistryCenter consumer_rc() {
-        return new RegistryCenter.StaticRegistryCenter(List.of(servers.split(",")));
+        return new ZkRegistryCenter();
     }
 
 }

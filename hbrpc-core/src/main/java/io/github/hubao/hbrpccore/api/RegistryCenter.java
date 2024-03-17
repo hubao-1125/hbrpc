@@ -1,5 +1,7 @@
 package io.github.hubao.hbrpccore.api;
 
+import io.github.hubao.hbrpccore.registry.ChangedListener;
+
 import java.util.List;
 
 public interface RegistryCenter {
@@ -16,6 +18,8 @@ public interface RegistryCenter {
 
     // consumer 侧
     List<String> fetchAll(String service);
+
+    void subscribe(String service, ChangedListener listener);
 
     class StaticRegistryCenter implements RegistryCenter {
         private List<String> providers;
@@ -44,6 +48,11 @@ public interface RegistryCenter {
         public List<String> fetchAll(String service) {
 
             return providers;
+        }
+
+        @Override
+        public void subscribe(String service, ChangedListener listener) {
+
         }
     }
 }

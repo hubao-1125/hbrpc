@@ -5,6 +5,8 @@ import io.github.hubao.hbrpccore.api.LoadBalancer;
 import io.github.hubao.hbrpccore.api.RegistryCenter;
 import io.github.hubao.hbrpccore.api.Router;
 import io.github.hubao.hbrpccore.api.RpcContext;
+import io.github.hubao.hbrpccore.registry.ChangedListener;
+import io.github.hubao.hbrpccore.registry.Event;
 import lombok.Data;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +17,7 @@ import org.springframework.core.env.Environment;
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Data
 public class ConsumerBootstrap implements ApplicationContextAware {
@@ -89,10 +92,20 @@ public class ConsumerBootstrap implements ApplicationContextAware {
     private Object createConsumerFromRegistry(Class<?> service, RpcContext rpcContext, RegistryCenter rc) {
 
         String serviceName = service.getCanonicalName();
-        List<String> providers = rc.fetchAll(serviceName);
+        List<String> providers = castUrls(rc.fetchAll(serviceName));
 
+        rc.subscribe(serviceName, event -> {
+            providers.clear();
+            providers.addAll(castUrls(event.getData()));
+        });
         return createConsumer(service, rpcContext, providers);
     }
+
+    private List<String> castUrls(List<String> nodes) {
+        return nodes.stream()
+                .map(url -> "http://" + url.replace("_", ":")).collect(Collectors.toList());
+    }
+
 
     private Object createConsumer(Class<?> service, RpcContext rpcContext, List<String> providers) {
         return Proxy.newProxyInstance(service.getClassLoader(),
