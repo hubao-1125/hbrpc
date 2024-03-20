@@ -23,7 +23,7 @@ public class ProviderConfig {
         return new ProviderInvoker(providerBootstrap);
     }
 
-    @Bean//(initMethod = "start", destroyMethod = "stop")
+    @Bean//(initMethod = "start")
     public RegistryCenter provider_rc() {
         return new ZkRegistryCenter();
     }

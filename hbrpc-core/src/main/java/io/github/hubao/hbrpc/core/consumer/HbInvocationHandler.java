@@ -3,6 +3,7 @@ package io.github.hubao.hbrpc.core.consumer;
 import io.github.hubao.hbrpc.core.api.RpcContext;
 import io.github.hubao.hbrpc.core.api.RpcRequest;
 import io.github.hubao.hbrpc.core.api.RpcResponse;
+import io.github.hubao.hbrpc.core.meta.InstanceMeta;
 import io.github.hubao.hbrpc.core.util.http.HttpInvoker;
 import io.github.hubao.hbrpc.core.util.MethodUtils;
 import io.github.hubao.hbrpc.core.util.http.OkHttpInvoker;
@@ -17,11 +18,11 @@ public class HbInvocationHandler implements InvocationHandler {
     Class<?> service;
 
     RpcContext rpcContext;
-    List<String> providers;
+    List<InstanceMeta> providers;
 
     HttpInvoker httpInvoker = new OkHttpInvoker();
 
-    public HbInvocationHandler(Class<?> clazz, RpcContext rpcContext, List<String> providers) {
+    public HbInvocationHandler(Class<?> clazz, RpcContext rpcContext, List<InstanceMeta> providers) {
         this.service = clazz;
         this.rpcContext = rpcContext;
         this.providers = providers;
@@ -39,11 +40,11 @@ public class HbInvocationHandler implements InvocationHandler {
         rpcRequest.setMethodSign(MethodUtils.methodSign(method));
         rpcRequest.setArgs(args);
 
-        List<String> route = rpcContext.getRouter().route(this.providers);
-        String url = (String) rpcContext.getLoadBalancer().choose(route);
-        System.out.println("loadBalancer.choose(route) ==>" + url);
+        List<InstanceMeta> instances = rpcContext.getRouter().route(this.providers);
+        InstanceMeta instance = rpcContext.getLoadBalancer().choose(instances);
+        System.out.println("loadBalancer.choose(route) ==>" + instance.toURL());
 
-        RpcResponse rpcResponse = httpInvoker.postRpcRequest(rpcRequest, url);
+        RpcResponse rpcResponse = httpInvoker.postRpcRequest(rpcRequest, instance.toURL());
 
 
         if(rpcResponse.isStatus()) {

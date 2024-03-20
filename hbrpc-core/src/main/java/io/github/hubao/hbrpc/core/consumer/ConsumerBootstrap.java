@@ -5,9 +5,12 @@ import io.github.hubao.hbrpc.core.api.LoadBalancer;
 import io.github.hubao.hbrpc.core.api.RegistryCenter;
 import io.github.hubao.hbrpc.core.api.Router;
 import io.github.hubao.hbrpc.core.api.RpcContext;
+import io.github.hubao.hbrpc.core.meta.InstanceMeta;
+import io.github.hubao.hbrpc.core.meta.ServiceMeta;
 import io.github.hubao.hbrpc.core.util.FieldUtils;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.env.Environment;
@@ -26,6 +29,15 @@ public class ConsumerBootstrap implements ApplicationContextAware {
     Environment environment;
 
     private Map<String, Object> stub = new HashMap<>();
+
+    @Value("${app.id}")
+    private String app;
+
+    @Value("${app.namespace}")
+    private String namespace;
+
+    @Value("${app.env}")
+    private String env;
 
     public void start() {
 
@@ -67,7 +79,7 @@ public class ConsumerBootstrap implements ApplicationContextAware {
                     Object consumer = stub.get(serviceName);
                     if (consumer == null) {
                         consumer = createConsumerFromRegistry(service, rpcContext, rc);
-//                        consumer = createConsumer(service, rpcContext, List.of(providers));
+                        stub.put(serviceName, consumer);
                     }
                     f.setAccessible(true);
                     f.set(bean, consumer);
@@ -83,22 +95,20 @@ public class ConsumerBootstrap implements ApplicationContextAware {
     private Object createConsumerFromRegistry(Class<?> service, RpcContext rpcContext, RegistryCenter rc) {
 
         String serviceName = service.getCanonicalName();
-        List<String> providers = castUrls(rc.fetchAll(serviceName));
+        List<InstanceMeta> instanceMetas = rc.fetchAll(ServiceMeta.builder()
+                        .app(app).namespace(namespace).env(env).name(serviceName)
+                .build());
 
-        rc.subscribe(serviceName, event -> {
-            providers.clear();
-            providers.addAll(castUrls(event.getData()));
+        rc.subscribe(ServiceMeta.builder()
+                .app(app).namespace(namespace).env(env).name(serviceName)
+                .build(), event -> {
+            instanceMetas.clear();
+            instanceMetas.addAll(event.getData());
         });
-        return createConsumer(service, rpcContext, providers);
+        return createConsumer(service, rpcContext, instanceMetas);
     }
 
-    private List<String> castUrls(List<String> nodes) {
-        return nodes.stream()
-                .map(url -> "http://" + url.replace("_", ":")).collect(Collectors.toList());
-    }
-
-
-    private Object createConsumer(Class<?> service, RpcContext rpcContext, List<String> providers) {
+    private Object createConsumer(Class<?> service, RpcContext rpcContext, List<InstanceMeta> providers) {
         return Proxy.newProxyInstance(service.getClassLoader(),
                 new Class[]{service}, new HbInvocationHandler(service, rpcContext, providers));
     }

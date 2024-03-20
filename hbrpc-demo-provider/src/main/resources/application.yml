@@ -1,3 +1,11 @@
 server:
   port: 8081
 
+hbrpc:
+  zkServer: localhost:2181
+  zkRootPath: hbrpc
+
+app:
+  id: hb
+  namespace: public
+  env: dev

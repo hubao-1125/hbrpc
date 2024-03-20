@@ -2,7 +2,9 @@ package io.github.hubao.hbrpc.core.provider;
 
 import io.github.hubao.hbrpc.core.annotation.HbProvider;
 import io.github.hubao.hbrpc.core.api.RegistryCenter;
+import io.github.hubao.hbrpc.core.meta.InstanceMeta;
 import io.github.hubao.hbrpc.core.meta.ProviderMeta;
+import io.github.hubao.hbrpc.core.meta.ServiceMeta;
 import io.github.hubao.hbrpc.core.util.MethodUtils;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -24,10 +26,19 @@ public class ProviderBootstrap implements ApplicationContextAware {
     ApplicationContext applicationContext;
 
     private MultiValueMap<String, ProviderMeta> skeleton = new LinkedMultiValueMap<>();
-    private String instance;
+    private InstanceMeta instance;
 
     @Value("${server.port}")
     private String port;
+
+    @Value("${app.id}")
+    private String app;
+
+    @Value("${app.namespace}")
+    private String namespace;
+
+    @Value("${app.env}")
+    private String env;
 
     RegistryCenter rc;
 
@@ -43,7 +54,7 @@ public class ProviderBootstrap implements ApplicationContextAware {
     @SneakyThrows
     public void start() {
         String ip = InetAddress.getLocalHost().getHostAddress();
-        instance = ip + "_" + port;
+        instance = InstanceMeta.http(ip, Integer.parseInt(port));
         rc.start();
         skeleton.keySet().forEach(this::registryService);
     }
@@ -55,13 +66,15 @@ public class ProviderBootstrap implements ApplicationContextAware {
     }
 
     private void unRegistryService(String service) {
-        RegistryCenter rc = applicationContext.getBean(RegistryCenter.class);
-        rc.unregister(service, instance);
+        ServiceMeta serviceMeta = ServiceMeta.builder().app(app).namespace(namespace).env(env).name(service)
+                .build();
+        rc.unregister(serviceMeta, instance);
     }
 
     private void registryService(String service) {
-        RegistryCenter rc = applicationContext.getBean(RegistryCenter.class);
-        rc.register(service, instance);
+        ServiceMeta serviceMeta = ServiceMeta.builder().app(app).namespace(namespace).env(env).name(service)
+                .build();
+        rc.register(serviceMeta, instance);
     }
 
     private void genInterface(Object x) {

@@ -1,5 +1,7 @@
 package io.github.hubao.hbrpc.core.api;
 
+import io.github.hubao.hbrpc.core.meta.InstanceMeta;
+import io.github.hubao.hbrpc.core.meta.ServiceMeta;
 import io.github.hubao.hbrpc.core.registry.ChangedListener;
 
 import java.util.List;
@@ -12,14 +14,14 @@ public interface RegistryCenter {
 
 
     // provider侧
-    void register(String service, String instance);
+    void register(ServiceMeta service, InstanceMeta instance);
 
-    void unregister(String service, String instance);
+    void unregister(ServiceMeta service, InstanceMeta instance);
 
     // consumer 侧
-    List<String> fetchAll(String service);
+    List<InstanceMeta> fetchAll(ServiceMeta service);
 
-    void subscribe(String service, ChangedListener listener);
+    void subscribe(ServiceMeta service, ChangedListener listener);
 
     class StaticRegistryCenter implements RegistryCenter {
         private List<String> providers;
@@ -37,21 +39,21 @@ public interface RegistryCenter {
         }
 
         @Override
-        public void register(String service, String instance) {
+        public void register(ServiceMeta service, InstanceMeta instance) {
         }
 
         @Override
-        public void unregister(String service, String instance) {
+        public void unregister(ServiceMeta service, InstanceMeta instance) {
         }
 
         @Override
-        public List<String> fetchAll(String service) {
+        public List<InstanceMeta> fetchAll(ServiceMeta service) {
 
-            return providers;
+            return null;
         }
 
         @Override
-        public void subscribe(String service, ChangedListener listener) {
+        public void subscribe(ServiceMeta service, ChangedListener listener) {
 
         }
     }
