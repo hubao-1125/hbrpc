@@ -5,6 +5,7 @@ import io.github.hubao.hbrpc.core.api.LoadBalancer;
 import io.github.hubao.hbrpc.core.api.RegistryCenter;
 import io.github.hubao.hbrpc.core.api.Router;
 import io.github.hubao.hbrpc.core.api.RpcContext;
+import io.github.hubao.hbrpc.core.util.FieldUtils;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -37,13 +38,6 @@ public class ConsumerBootstrap implements ApplicationContextAware {
         rpcContext.setRouter(router);
         rpcContext.setLoadBalancer(loadBalancer);
 
-//        String urls = environment.getProperty("hbrpc.providers", "");
-//        if (Strings.isEmpty(urls)) {
-//            System.out.println("hbrpc:providers");
-//        }
-//        String[] providers = urls.split(",");
-
-
         String[] names = applicationContext.getBeanDefinitionNames();
         long start = System.currentTimeMillis();
         for (String name : names) {
@@ -63,7 +57,7 @@ public class ConsumerBootstrap implements ApplicationContextAware {
             }
             System.out.println(packageName + " package bean => " + name);
 
-            List<Field> fields = findAnnotatedField(bean.getClass());
+            List<Field> fields = FieldUtils.findAnnotatedField(bean.getClass(), HbConsumer.class);
 
             fields.stream().forEach( f -> {
                 System.out.println(" ===> " + f.getName());
@@ -109,18 +103,6 @@ public class ConsumerBootstrap implements ApplicationContextAware {
                 new Class[]{service}, new HbInvocationHandler(service, rpcContext, providers));
     }
 
-    private List<Field> findAnnotatedField(Class<?> aClass) {
-        List<Field> result = new ArrayList<>();
-        while (aClass != null) {
-            Field[] fields = aClass.getDeclaredFields();
-            for (Field f : fields) {
-                if (f.isAnnotationPresent(HbConsumer.class)) {
-                    result.add(f);
-                }
-            }
-            aClass = aClass.getSuperclass();
-        }
-        return result;
-    }
+
 
 }
