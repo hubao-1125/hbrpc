@@ -6,7 +6,7 @@ POST http://localhost:8082/
 Content-Type: application/json
 
 {
-  "service": "io.github.hubao.hbrpcdemoapi.UserService",
+  "service": "io.github.hubao.hbrpc.demo.api.UserService",
   "methodSign": "findById@1_int",
   "args": [100]
 }

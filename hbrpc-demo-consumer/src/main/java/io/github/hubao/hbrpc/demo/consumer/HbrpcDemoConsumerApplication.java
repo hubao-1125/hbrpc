@@ -1,9 +1,9 @@
 package io.github.hubao.hbrpc.demo.consumer;
 
-import io.github.hubao.hbrpccore.annotation.HbConsumer;
-import io.github.hubao.hbrpccore.consumer.ConsumerConfig;
-import io.github.hubao.hbrpcdemoapi.User;
-import io.github.hubao.hbrpcdemoapi.UserService;
+import io.github.hubao.hbrpc.core.annotation.HbConsumer;
+import io.github.hubao.hbrpc.core.consumer.ConsumerConfig;
+import io.github.hubao.hbrpc.demo.api.User;
+import io.github.hubao.hbrpc.demo.api.UserService;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
