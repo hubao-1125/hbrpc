@@ -2,9 +2,7 @@ package io.github.hubao.hbrpc.core.provider;
 
 import io.github.hubao.hbrpc.core.annotation.HbProvider;
 import io.github.hubao.hbrpc.core.api.RegistryCenter;
-import io.github.hubao.hbrpc.core.util.TypeUtils;
-import io.github.hubao.hbrpc.core.api.RpcRequest;
-import io.github.hubao.hbrpc.core.api.RpcResponse;
+import io.github.hubao.hbrpc.core.meta.ProviderMeta;
 import io.github.hubao.hbrpc.core.util.MethodUtils;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -16,7 +14,6 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.util.*;
@@ -32,9 +29,12 @@ public class ProviderBootstrap implements ApplicationContextAware {
     @Value("${server.port}")
     private String port;
 
+    RegistryCenter rc;
+
     @PostConstruct  // init-method
     public void init() {
         Map<String, Object> providers = applicationContext.getBeansWithAnnotation(HbProvider.class);
+        rc = applicationContext.getBean(RegistryCenter.class);
         providers.forEach((x,y) -> System.out.println(x));
         providers.values().forEach(this::genInterface);
     }
@@ -44,12 +44,14 @@ public class ProviderBootstrap implements ApplicationContextAware {
     public void start() {
         String ip = InetAddress.getLocalHost().getHostAddress();
         instance = ip + "_" + port;
+        rc.start();
         skeleton.keySet().forEach(this::registryService);
     }
 
     @PreDestroy
     public void stop() {
         skeleton.keySet().forEach(this::unRegistryService);
+        rc.stop();
     }
 
     private void unRegistryService(String service) {
@@ -84,38 +86,6 @@ public class ProviderBootstrap implements ApplicationContextAware {
         skeleton.add(itfer.getCanonicalName(), meta);
     }
 
-    public RpcResponse invoke(RpcRequest request) {
-        RpcResponse rpcResponse = new RpcResponse();
-        List<ProviderMeta> providerMetas = skeleton.get(request.getService());
-        try {
-            ProviderMeta meta = findProviderMeta(providerMetas, request.getMethodSign());
-            Method method = meta.getMethod();
-            Object[] args = processArgs(request.getArgs(), method.getParameterTypes());
-            Object result = method.invoke(meta.getServiceImpl(), args);
-            rpcResponse.setStatus(true);
-            rpcResponse.setData(result);
-            return rpcResponse;
-        } catch (InvocationTargetException e) {
-            rpcResponse.setEx(new RuntimeException(e.getTargetException().getMessage()));
-        } catch (IllegalAccessException e) {
-            rpcResponse.setEx(new RuntimeException(e.getMessage()));
-        }
-        return rpcResponse;
-    }
 
-    private Object[] processArgs(Object[] args, Class<?>[] parameterTypes) {
-        if(args == null || args.length == 0) return args;
-        Object[] actuals = new Object[args.length];
-        for (int i = 0; i < args.length; i++) {
-            actuals[i] = TypeUtils.cast(args[i], parameterTypes[i]);
-        }
-        return actuals;
-    }
-
-    private ProviderMeta findProviderMeta(List<ProviderMeta> providerMetas, String methodSign) {
-        Optional<ProviderMeta> optional = providerMetas.stream()
-                .filter(x -> x.getMethodSign().equals(methodSign)).findFirst();
-        return optional.orElse(null);
-    }
 
 }

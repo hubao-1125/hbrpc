@@ -1,4 +1,4 @@
-package io.github.hubao.hbrpc.core.provider;
+package io.github.hubao.hbrpc.core.meta;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
