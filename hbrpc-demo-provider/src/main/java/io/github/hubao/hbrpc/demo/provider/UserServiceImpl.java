@@ -8,7 +8,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 @Component
-@HbProvider
+@HbProvider(version = "1.0.0")
 public class UserServiceImpl implements UserService {
 
     @Autowired

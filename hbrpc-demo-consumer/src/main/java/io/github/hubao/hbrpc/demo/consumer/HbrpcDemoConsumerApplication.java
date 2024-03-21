@@ -2,6 +2,7 @@ package io.github.hubao.hbrpc.demo.consumer;
 
 import io.github.hubao.hbrpc.core.annotation.HbConsumer;
 import io.github.hubao.hbrpc.core.consumer.ConsumerConfig;
+import io.github.hubao.hbrpc.demo.api.OrderService;
 import io.github.hubao.hbrpc.demo.api.User;
 import io.github.hubao.hbrpc.demo.api.UserService;
 import org.springframework.boot.ApplicationRunner;
@@ -18,8 +19,11 @@ import org.springframework.web.bind.annotation.RestController;
 @Import({ConsumerConfig.class})
 public class HbrpcDemoConsumerApplication {
 
-    @HbConsumer
+    @HbConsumer(version = "1.0.0")
     UserService userService;
+
+    @HbConsumer(version = "hb_v_1.0.0")
+    OrderService orderService;
 
     public static void main(String[] args) {
         SpringApplication.run(HbrpcDemoConsumerApplication.class, args);
@@ -68,6 +72,10 @@ public class HbrpcDemoConsumerApplication {
             for (long id : userService.getIds(new int[]{4,5,6})) {
                 System.out.println(id);
             }
+
+            System.out.println(" ===> orderService.findById()");
+            System.out.println(orderService.findById(666));
+
 
             //Order order = orderService.findById(2);
             //System.out.println("RPC result orderService.findById(2) = " + order);

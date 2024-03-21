@@ -22,10 +22,13 @@ public class HbInvocationHandler implements InvocationHandler {
 
     HttpInvoker httpInvoker = new OkHttpInvoker();
 
-    public HbInvocationHandler(Class<?> clazz, RpcContext rpcContext, List<InstanceMeta> providers) {
+    private String version;
+
+    public HbInvocationHandler(Class<?> clazz, RpcContext rpcContext, List<InstanceMeta> providers, String version) {
         this.service = clazz;
         this.rpcContext = rpcContext;
         this.providers = providers;
+        this.version = version;
     }
 
     @Override
@@ -39,13 +42,13 @@ public class HbInvocationHandler implements InvocationHandler {
         rpcRequest.setService(service.getCanonicalName());
         rpcRequest.setMethodSign(MethodUtils.methodSign(method));
         rpcRequest.setArgs(args);
+        rpcRequest.setVersion(version);
 
         List<InstanceMeta> instances = rpcContext.getRouter().route(this.providers);
         InstanceMeta instance = rpcContext.getLoadBalancer().choose(instances);
         System.out.println("loadBalancer.choose(route) ==>" + instance.toURL());
 
         RpcResponse rpcResponse = httpInvoker.postRpcRequest(rpcRequest, instance.toURL());
-
 
         if(rpcResponse.isStatus()) {
             Object data = rpcResponse.getData();

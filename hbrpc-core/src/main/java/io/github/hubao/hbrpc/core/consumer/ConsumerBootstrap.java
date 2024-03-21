@@ -18,7 +18,6 @@ import org.springframework.core.env.Environment;
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Data
 public class ConsumerBootstrap implements ApplicationContextAware {
@@ -73,12 +72,14 @@ public class ConsumerBootstrap implements ApplicationContextAware {
 
             fields.stream().forEach( f -> {
                 System.out.println(" ===> " + f.getName());
+
                 try {
                     Class<?> service = f.getType();
+                    String version = f.getAnnotation(HbConsumer.class).version();
                     String serviceName = service.getCanonicalName();
                     Object consumer = stub.get(serviceName);
                     if (consumer == null) {
-                        consumer = createConsumerFromRegistry(service, rpcContext, rc);
+                        consumer = createConsumerFromRegistry(service, rpcContext, rc, version);
                         stub.put(serviceName, consumer);
                     }
                     f.setAccessible(true);
@@ -92,25 +93,25 @@ public class ConsumerBootstrap implements ApplicationContextAware {
         System.out.println("create consumer take " + (System.currentTimeMillis()-start) + " ms");
     }
 
-    private Object createConsumerFromRegistry(Class<?> service, RpcContext rpcContext, RegistryCenter rc) {
+    private Object createConsumerFromRegistry(Class<?> service, RpcContext rpcContext, RegistryCenter rc, String version) {
 
         String serviceName = service.getCanonicalName();
         List<InstanceMeta> instanceMetas = rc.fetchAll(ServiceMeta.builder()
-                        .app(app).namespace(namespace).env(env).name(serviceName)
+                        .app(app).namespace(namespace).env(env).name(serviceName).version(version)
                 .build());
 
         rc.subscribe(ServiceMeta.builder()
-                .app(app).namespace(namespace).env(env).name(serviceName)
+                .app(app).namespace(namespace).env(env).name(serviceName).version(version)
                 .build(), event -> {
             instanceMetas.clear();
             instanceMetas.addAll(event.getData());
         });
-        return createConsumer(service, rpcContext, instanceMetas);
+        return createConsumer(service, rpcContext, instanceMetas, version);
     }
 
-    private Object createConsumer(Class<?> service, RpcContext rpcContext, List<InstanceMeta> providers) {
+    private Object createConsumer(Class<?> service, RpcContext rpcContext, List<InstanceMeta> providers, String version) {
         return Proxy.newProxyInstance(service.getClassLoader(),
-                new Class[]{service}, new HbInvocationHandler(service, rpcContext, providers));
+                new Class[]{service}, new HbInvocationHandler(service, rpcContext, providers, version));
     }
 
 

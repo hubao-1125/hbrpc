@@ -23,6 +23,7 @@ public class RpcRequest {
      * 参数
      */
     private Object[] args;
+    private String version;
 
 
 }

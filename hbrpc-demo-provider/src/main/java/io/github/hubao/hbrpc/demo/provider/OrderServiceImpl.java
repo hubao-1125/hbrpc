@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
  * @Date: 2024/3/14$ 15:39$
  */
 @Component
-@HbProvider
+@HbProvider(version = "hb_v_1.0.0")
 public class OrderServiceImpl implements OrderService {
     @Override
     public Order findById(Integer id) {

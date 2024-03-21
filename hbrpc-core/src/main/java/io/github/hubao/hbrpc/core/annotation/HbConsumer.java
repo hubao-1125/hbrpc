@@ -7,4 +7,6 @@ import java.lang.annotation.*;
 @Target(ElementType.FIELD)
 @Inherited
 public @interface HbConsumer {
+
+    String version() default "";
 }

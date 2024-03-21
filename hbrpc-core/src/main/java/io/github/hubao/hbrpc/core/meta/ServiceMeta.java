@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * 功能描述: 服务元数据
@@ -20,11 +21,15 @@ public class ServiceMeta {
     private String namespace;
     private String env;
     private String name;
+    private String version;
 
 
 
     public String toPath() {
-        return String.format("%s_%s_%s_%s", app, namespace, env, name);
+        if (StringUtils.isBlank(version)) {
+            return String.format("%s_%s_%s_%s", app, namespace, env, name);
+        }
+        return String.format("%s_%s_%s_%s?version=%s", app, namespace, env, name, version);
     }
 
 }

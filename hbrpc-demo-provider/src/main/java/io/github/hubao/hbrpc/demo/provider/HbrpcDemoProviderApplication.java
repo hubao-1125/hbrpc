@@ -43,6 +43,7 @@ public class HbrpcDemoProviderApplication {
             request.setService("io.github.hubao.hbrpc.demo.api.UserService");
             request.setMethodSign("findById@1_int");
             request.setArgs(new Object[]{100});
+            request.setVersion("1.0.0");
 
             RpcResponse rpcResponse = invoke(request);
             System.out.println("return : "+rpcResponse.getData());
@@ -52,6 +53,7 @@ public class HbrpcDemoProviderApplication {
             request1.setService("io.github.hubao.hbrpc.demo.api.UserService");
             request1.setMethodSign("findById@2_int_java.lang.String");
             request1.setArgs(new Object[]{100, "CC"});
+            request1.setVersion("1.0.0");
 
             RpcResponse rpcResponse1 = invoke(request1);
             System.out.println("return : "+rpcResponse1.getData());

@@ -7,4 +7,6 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 @Inherited
 public @interface HbProvider {
+
+    String version() default "";
 }

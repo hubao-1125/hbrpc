@@ -3,7 +3,9 @@ package io.github.hubao.hbrpc.core.provider;
 import io.github.hubao.hbrpc.core.api.RpcRequest;
 import io.github.hubao.hbrpc.core.api.RpcResponse;
 import io.github.hubao.hbrpc.core.meta.ProviderMeta;
+import io.github.hubao.hbrpc.core.meta.ServiceMeta;
 import io.github.hubao.hbrpc.core.util.TypeUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.MultiValueMap;
 
 import java.lang.reflect.InvocationTargetException;
@@ -13,7 +15,16 @@ import java.util.Optional;
 
 public class ProviderInvoker {
 
-    private MultiValueMap<String, ProviderMeta> skeleton;
+    private MultiValueMap<ServiceMeta, ProviderMeta> skeleton;
+
+    @Value("${app.id}")
+    private String app;
+
+    @Value("${app.namespace}")
+    private String namespace;
+
+    @Value("${app.env}")
+    private String env;
 
     public ProviderInvoker(ProviderBootstrap providerBootstrap) {
         this.skeleton = providerBootstrap.getSkeleton();
@@ -21,7 +32,9 @@ public class ProviderInvoker {
 
     public RpcResponse invoke(RpcRequest request) {
         RpcResponse rpcResponse = new RpcResponse();
-        List<ProviderMeta> providerMetas = skeleton.get(request.getService());
+        List<ProviderMeta> providerMetas = skeleton.get(ServiceMeta.builder().app(app).namespace(namespace).env(env)
+                .name(request.getService()).version(request.getVersion() == null ? "" : request.getVersion())
+                .build());
         try {
             ProviderMeta meta = findProviderMeta(providerMetas, request.getMethodSign());
             Method method = meta.getMethod();

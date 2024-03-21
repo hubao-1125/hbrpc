@@ -25,7 +25,7 @@ public class ProviderBootstrap implements ApplicationContextAware {
 
     ApplicationContext applicationContext;
 
-    private MultiValueMap<String, ProviderMeta> skeleton = new LinkedMultiValueMap<>();
+    private MultiValueMap<ServiceMeta, ProviderMeta> skeleton = new LinkedMultiValueMap<>();
     private InstanceMeta instance;
 
     @Value("${server.port}")
@@ -65,19 +65,16 @@ public class ProviderBootstrap implements ApplicationContextAware {
         rc.stop();
     }
 
-    private void unRegistryService(String service) {
-        ServiceMeta serviceMeta = ServiceMeta.builder().app(app).namespace(namespace).env(env).name(service)
-                .build();
+    private void unRegistryService(ServiceMeta serviceMeta) {
         rc.unregister(serviceMeta, instance);
     }
 
-    private void registryService(String service) {
-        ServiceMeta serviceMeta = ServiceMeta.builder().app(app).namespace(namespace).env(env).name(service)
-                .build();
+    private void registryService(ServiceMeta serviceMeta) {
         rc.register(serviceMeta, instance);
     }
 
     private void genInterface(Object x) {
+        String version = x.getClass().getAnnotation(HbProvider.class).version();
         Arrays.stream(x.getClass().getInterfaces()).forEach(
                 itfer -> {
                     Method[] methods = itfer.getMethods();
@@ -85,18 +82,18 @@ public class ProviderBootstrap implements ApplicationContextAware {
                         if (MethodUtils.checkLocalMethod(method)) {
                             continue;
                         }
-                        createProvider(itfer, x, method);
+                        createProvider(itfer, x, method, version);
                     }
                 });
     }
 
-    private void createProvider(Class<?> itfer, Object x, Method method) {
-        ProviderMeta meta = new ProviderMeta();
-        meta.setMethod(method);
-        meta.setServiceImpl(x);
-        meta.setMethodSign(MethodUtils.methodSign(method));
+    private void createProvider(Class<?> itfer, Object x, Method method, String version) {
+        ProviderMeta meta = ProviderMeta.builder().method(method).serviceImpl(x).methodSign(MethodUtils.methodSign(method))
+                .build();
         System.out.println(" create a provider: " + meta);
-        skeleton.add(itfer.getCanonicalName(), meta);
+        ServiceMeta serviceMeta = ServiceMeta.builder().app(app).namespace(namespace).env(env).name(itfer.getCanonicalName()).version(version)
+                .build();
+        skeleton.add(serviceMeta, meta);
     }
 
 
