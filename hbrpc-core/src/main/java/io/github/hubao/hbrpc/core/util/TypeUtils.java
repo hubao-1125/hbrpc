@@ -2,6 +2,7 @@ package io.github.hubao.hbrpc.core.util;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
@@ -15,8 +16,8 @@ import java.util.*;
  * @author hubao
  * @Date: 2024/3/14$ 15:36$
  */
+@Slf4j
 public class TypeUtils {
-
 
     public static Object cast(Object origin, Class<?> type) {
         if(origin == null) return null;
@@ -33,13 +34,22 @@ public class TypeUtils {
             Class<?> componentType = type.getComponentType();
             Object resultArray = Array.newInstance(componentType, length);
             for (int i = 0; i < length; i++) {
-                Array.set(resultArray, i, Array.get(origin, i));
+                if (componentType.isPrimitive() || componentType.getPackageName().startsWith("java")) {
+                    Array.set(resultArray, i, Array.get(origin, i));
+                } else {
+                    Object castObject = cast(Array.get(origin, i), componentType);
+                    Array.set(resultArray, i, castObject);
+                }
             }
             return resultArray;
         }
 
         if (origin instanceof HashMap map) {
             JSONObject jsonObject = new JSONObject(map);
+            return jsonObject.toJavaObject(type);
+        }
+
+        if (origin instanceof JSONObject jsonObject) {
             return jsonObject.toJavaObject(type);
         }
 
@@ -57,27 +67,25 @@ public class TypeUtils {
             return Short.valueOf(origin.toString());
         } else if(type.equals(Character.class) || type.equals(Character.TYPE)) {
             return Character.valueOf(origin.toString().charAt(0));
+        } else if(type.equals(Boolean.class) || type.equals(Boolean.TYPE)) {
+            return Boolean.valueOf(origin.toString());
         }
-
         return null;
-
-
     }
 
-    public static Object castByMethod(Object data, Method method) {
-
+    public static Object castMethodResult(Method method, Object data) {
         Class<?> type = method.getReturnType();
-        System.out.println("method.getReturnType() = " + type);
+        log.debug("method.getReturnType() = " + type);
         if (data instanceof JSONObject jsonResult) {
             if (Map.class.isAssignableFrom(type)) {
                 Map resultMap = new HashMap();
                 Type genericReturnType = method.getGenericReturnType();
-                System.out.println(genericReturnType);
+                log.debug(genericReturnType.toString());
                 if (genericReturnType instanceof ParameterizedType parameterizedType) {
                     Class<?> keyType = (Class<?>)parameterizedType.getActualTypeArguments()[0];
                     Class<?> valueType = (Class<?>)parameterizedType.getActualTypeArguments()[1];
-                    System.out.println("keyType  : " + keyType);
-                    System.out.println("valueType: " + valueType);
+                    log.debug("keyType  : " + keyType);
+                    log.debug("valueType: " + valueType);
                     jsonResult.entrySet().stream().forEach(
                             e -> {
                                 Object key = cast(e.getKey(), keyType);
@@ -106,10 +114,10 @@ public class TypeUtils {
             } else if (List.class.isAssignableFrom(type)) {
                 List<Object> resultList = new ArrayList<>(array.length);
                 Type genericReturnType = method.getGenericReturnType();
-                System.out.println(genericReturnType);
+                log.debug(genericReturnType.toString());
                 if (genericReturnType instanceof ParameterizedType parameterizedType) {
                     Type actualType = parameterizedType.getActualTypeArguments()[0];
-                    System.out.println(actualType);
+                    log.debug(actualType.toString());
                     for (Object o : array) {
                         resultList.add(cast(o, (Class<?>) actualType));
                     }
@@ -123,6 +131,5 @@ public class TypeUtils {
         } else {
             return cast(data, type);
         }
-
     }
 }

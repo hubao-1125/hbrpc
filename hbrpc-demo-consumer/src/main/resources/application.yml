@@ -11,3 +11,7 @@ app:
   namespace: public
   env: dev
 
+logging:
+  level:
+    root: error
+    io.github.hubao: info

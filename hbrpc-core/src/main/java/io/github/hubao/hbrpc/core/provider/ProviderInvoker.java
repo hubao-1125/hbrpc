@@ -19,8 +19,8 @@ public class ProviderInvoker {
         this.skeleton = providerBootstrap.getSkeleton();
     }
 
-    public RpcResponse invoke(RpcRequest request) {
-        RpcResponse rpcResponse = new RpcResponse();
+    public RpcResponse<Object> invoke(RpcRequest request) {
+        RpcResponse<Object> rpcResponse = new RpcResponse<>();
         List<ProviderMeta> providerMetas = skeleton.get(request.getService());
         try {
             ProviderMeta meta = findProviderMeta(providerMetas, request.getMethodSign());
@@ -52,4 +52,5 @@ public class ProviderInvoker {
                 .filter(x -> x.getMethodSign().equals(methodSign)).findFirst();
         return optional.orElse(null);
     }
+
 }

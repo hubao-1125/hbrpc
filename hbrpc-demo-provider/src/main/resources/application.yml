@@ -9,3 +9,9 @@ app:
   id: hb
   namespace: public
   env: dev
+
+
+logging:
+  level:
+    root: error
+    io.github.hubao: info

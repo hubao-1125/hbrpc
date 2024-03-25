@@ -5,5 +5,5 @@ import io.github.hubao.hbrpc.core.api.RpcResponse;
 
 public interface HttpInvoker {
 
-    RpcResponse<?> postRpcRequest(RpcRequest rpcRequest, String url);
+    RpcResponse<?> post(RpcRequest rpcRequest, String url);
 }

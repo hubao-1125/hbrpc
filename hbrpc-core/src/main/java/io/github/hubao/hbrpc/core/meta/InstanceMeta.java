@@ -40,7 +40,7 @@ public class InstanceMeta {
         return new InstanceMeta("http", host, port, "");
     }
 
-    public String toURL() {
+    public String toUrl() {
         return String.format("%s://%s:%d/%s", scheme, host, port, context);
     }
 }
