@@ -1,5 +1,6 @@
 package io.github.hubao.hbrpc.core.provider;
 
+import io.github.hubao.hbrpc.core.api.RpcException;
 import io.github.hubao.hbrpc.core.api.RpcRequest;
 import io.github.hubao.hbrpc.core.api.RpcResponse;
 import io.github.hubao.hbrpc.core.meta.ProviderMeta;
@@ -31,9 +32,9 @@ public class ProviderInvoker {
             rpcResponse.setData(result);
             return rpcResponse;
         } catch (InvocationTargetException e) {
-            rpcResponse.setEx(new RuntimeException(e.getTargetException().getMessage()));
+            rpcResponse.setEx(new RpcException(e.getTargetException().getMessage()));
         } catch (IllegalAccessException e) {
-            rpcResponse.setEx(new RuntimeException(e.getMessage()));
+            rpcResponse.setEx(new RpcException(e.getMessage()));
         }
         return rpcResponse;
     }

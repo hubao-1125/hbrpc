@@ -1,9 +1,6 @@
 package io.github.hubao.hbrpc.core.consumer;
 
-import io.github.hubao.hbrpc.core.api.Filter;
-import io.github.hubao.hbrpc.core.api.RpcContext;
-import io.github.hubao.hbrpc.core.api.RpcRequest;
-import io.github.hubao.hbrpc.core.api.RpcResponse;
+import io.github.hubao.hbrpc.core.api.*;
 import io.github.hubao.hbrpc.core.meta.InstanceMeta;
 import io.github.hubao.hbrpc.core.util.TypeUtils;
 import io.github.hubao.hbrpc.core.util.http.HttpInvoker;
@@ -13,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.net.SocketTimeoutException;
 import java.util.List;
 
 @Slf4j
@@ -22,12 +20,15 @@ public class HbInvocationHandler implements InvocationHandler {
     RpcContext context;
     List<InstanceMeta> providers;
 
-    HttpInvoker httpInvoker = new OkHttpInvoker();
+    HttpInvoker httpInvoker;
 
     public HbInvocationHandler(Class<?> clazz, RpcContext context, List<InstanceMeta> providers) {
         this.service = clazz;
         this.context = context;
         this.providers = providers;
+        int timeout = Integer.parseInt(context.getParameters()
+                .getOrDefault("app.timeout", "1000"));
+        this.httpInvoker = new OkHttpInvoker(timeout);
     }
 
     @Override
@@ -42,38 +43,53 @@ public class HbInvocationHandler implements InvocationHandler {
         rpcRequest.setMethodSign(MethodUtils.methodSign(method));
         rpcRequest.setArgs(args);
 
-        for (Filter filter : this.context.getFilters()) {
-            Object preResult = filter.prefilter(rpcRequest);
-            if(preResult != null) {
-                log.debug(filter.getClass().getName() + " ==> prefilter: " + preResult);
-                return preResult;
+        int retries = Integer.parseInt(context.getParameters()
+                .getOrDefault("app.retries", "1"));
+
+        while (retries -- > 0) {
+            log.debug(" ===> reties: " + retries);
+            try {
+                for (Filter filter : this.context.getFilters()) {
+                    Object preResult = filter.prefilter(rpcRequest);
+                    if (preResult != null) {
+                        log.debug(filter.getClass().getName() + " ==> prefilter: " + preResult);
+                        return preResult;
+                    }
+                }
+
+                List<InstanceMeta> instances = context.getRouter().route(providers);
+                InstanceMeta instance = context.getLoadBalancer().choose(instances);
+                log.debug("loadBalancer.choose(instances) ==> " + instance);
+
+                RpcResponse<?> rpcResponse = httpInvoker.post(rpcRequest, instance.toUrl());
+                Object result = castReturnResult(method, rpcResponse);
+
+                for (Filter filter : this.context.getFilters()) {
+                    Object filterResult = filter.postfilter(rpcRequest, rpcResponse, result);
+                    if (filterResult != null) {
+                        return filterResult;
+                    }
+                }
+                return result;
+            } catch (Exception ex) {
+                if (!(ex.getCause() instanceof SocketTimeoutException)) {
+                    throw ex;
+                }
             }
         }
-
-        List<InstanceMeta> instances = context.getRouter().route(providers);
-        InstanceMeta instance = context.getLoadBalancer().choose(instances);
-        log.debug("loadBalancer.choose(instances) ==> " + instance);
-
-        RpcResponse<?> rpcResponse = httpInvoker.post(rpcRequest, instance.toUrl());
-        Object result = castReturnResult(method, rpcResponse);
-
-        for (Filter filter : this.context.getFilters()) {
-            Object filterResult = filter.postfilter(rpcRequest, rpcResponse, result);
-            if(filterResult != null) {
-                return filterResult;
-            }
-        }
-
-        return result;
+        return null;
     }
 
     private static Object castReturnResult(Method method, RpcResponse<?> rpcResponse) {
         if (rpcResponse.isStatus()) {
-            Object data = rpcResponse.getData();
-            return TypeUtils.castMethodResult(method, data);
+            return TypeUtils.castMethodResult(method, rpcResponse.getData());
         } else {
-            Exception ex = rpcResponse.getEx();
-            throw new RuntimeException(ex);
+            Exception exception = rpcResponse.getEx();
+            if(exception instanceof RpcException ex) {
+                throw ex;
+            } else {
+                throw new RpcException(exception, RpcException.UNKNOWN_EX);
+            }
         }
     }
 }

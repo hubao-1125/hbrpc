@@ -10,8 +10,10 @@ app:
   id: hb
   namespace: public
   env: dev
+  retries: 2
+  timeout: 1000
 
 logging:
   level:
     root: error
-    io.github.hubao: info
+    io.github.hubao: debug

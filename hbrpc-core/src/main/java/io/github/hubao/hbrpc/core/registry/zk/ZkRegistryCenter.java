@@ -1,6 +1,7 @@
 package io.github.hubao.hbrpc.core.registry.zk;
 
 import io.github.hubao.hbrpc.core.api.RegistryCenter;
+import io.github.hubao.hbrpc.core.api.RpcException;
 import io.github.hubao.hbrpc.core.meta.InstanceMeta;
 import io.github.hubao.hbrpc.core.meta.ServiceMeta;
 import io.github.hubao.hbrpc.core.registry.ChangedListener;
@@ -64,7 +65,7 @@ public class ZkRegistryCenter implements RegistryCenter {
             log.info(" ===> register to zk: " + instancePath);
             client.create().withMode(CreateMode.EPHEMERAL).forPath(instancePath, "provider".getBytes());
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new RpcException(ex);
         }
     }
 
@@ -81,7 +82,7 @@ public class ZkRegistryCenter implements RegistryCenter {
             log.info(" ===> unregister from zk: " + instancePath);
             client.delete().quietly().forPath(instancePath);
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new RpcException(ex);
         }
     }
 
@@ -95,7 +96,7 @@ public class ZkRegistryCenter implements RegistryCenter {
             nodes.forEach(System.out::println);
             return mapInstances(nodes);
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new RpcException(ex);
         }
     }
 
