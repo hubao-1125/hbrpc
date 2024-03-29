@@ -16,4 +16,4 @@ app:
 logging:
   level:
     root: error
-    io.github.hubao: debug
+    io.github.hubao: info

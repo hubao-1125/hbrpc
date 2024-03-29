@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -100,17 +101,34 @@ public class UserServiceImpl implements UserService {
         return new User(100, "KK100");
     }
 
+    private String timeoutPorts = "8081,8094";
+
+    public String getTimeoutPorts() {
+        return timeoutPorts;
+    }
+
+    public void setTimeoutPorts(String timeoutPorts) {
+        this.timeoutPorts = timeoutPorts;
+    }
+
     @Override
     public User find(int timeout) {
         String port = environment.getProperty("server.port");
-        if("8081".equals(port) || "8094".equals(port)) {
+        if(Arrays.stream(timeoutPorts.split(",")).anyMatch(port::equals)) {
+//        if(port.equals("8081") || port.equals("8094")) {
             try {
+                System.out.println("server.port ===>  " + port);
                 Thread.sleep(timeout);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
         return new User(1001, "KK1001-" + port);
+    }
+
+    @Override
+    public void setTimeoutPort(String ports) {
+        setTimeoutPorts(ports);
     }
 
 }
