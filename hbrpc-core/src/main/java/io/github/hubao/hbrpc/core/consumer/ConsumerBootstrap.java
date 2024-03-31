@@ -40,6 +40,9 @@ public class ConsumerBootstrap implements ApplicationContextAware {
     @Value("${app.timeout}")
     private int timeout;
 
+    @Value("${app.grayRatio}")
+    private int grayRatio;
+
     private Map<String, Object> stub = new HashMap<>();
 
     public void start() {
@@ -55,6 +58,7 @@ public class ConsumerBootstrap implements ApplicationContextAware {
         context.setFilters(filters);
         context.getParameters().put("app.retries", String.valueOf(retries));
         context.getParameters().put("app.timeout", String.valueOf(timeout));
+//        context.getParameters().put("app.grayRatio", String.valueOf(grayRatio));
 
         String[] names = applicationContext.getBeanDefinitionNames();
         for (String name : names) {

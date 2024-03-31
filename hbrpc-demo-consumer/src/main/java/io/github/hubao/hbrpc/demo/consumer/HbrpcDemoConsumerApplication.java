@@ -1,6 +1,8 @@
 package io.github.hubao.hbrpc.demo.consumer;
 
 import io.github.hubao.hbrpc.core.annotation.HbConsumer;
+import io.github.hubao.hbrpc.core.api.Router;
+import io.github.hubao.hbrpc.core.cluster.GrayRouter;
 import io.github.hubao.hbrpc.core.consumer.ConsumerConfig;
 import io.github.hubao.hbrpc.demo.api.User;
 import io.github.hubao.hbrpc.demo.api.UserService;
@@ -40,6 +42,17 @@ public class HbrpcDemoConsumerApplication {
     public User find(@RequestParam("timeout") int timeout) {
         return userService.find(timeout);
     }
+
+    @Autowired
+    Router router;
+
+    @RequestMapping("/gray/")
+    public String gray(@RequestParam("ratio") int ratio) {
+        GrayRouter grayRouter = (GrayRouter) router;
+        grayRouter.setGrayRatio(ratio);
+        return "OK";
+    }
+
 
     public static void main(String[] args) {
         SpringApplication.run(HbrpcDemoConsumerApplication.class, args);

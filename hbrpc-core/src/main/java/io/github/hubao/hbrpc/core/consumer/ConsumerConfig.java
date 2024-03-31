@@ -4,6 +4,7 @@ import io.github.hubao.hbrpc.core.api.Filter;
 import io.github.hubao.hbrpc.core.api.LoadBalancer;
 import io.github.hubao.hbrpc.core.api.RegistryCenter;
 import io.github.hubao.hbrpc.core.api.Router;
+import io.github.hubao.hbrpc.core.cluster.GrayRouter;
 import io.github.hubao.hbrpc.core.cluster.RoundRibonLoadBalancer;
 import io.github.hubao.hbrpc.core.filter.CacheFilter;
 import io.github.hubao.hbrpc.core.meta.InstanceMeta;
@@ -45,9 +46,12 @@ public class ConsumerConfig {
         return new RoundRibonLoadBalancer<>();
     }
 
+    @Value("${app.grayRatio}")
+    private int grayRatio;
+
     @Bean
     public Router<InstanceMeta> router() {
-        return Router.Default;
+        return new GrayRouter(grayRatio);
     }
 
     @Bean(initMethod = "start", destroyMethod = "stop")

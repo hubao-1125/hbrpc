@@ -1,8 +1,11 @@
 #### 111
-GET http://localhost:8088/?id=191
+GET http://localhost:8088/api/?id=191
 
 #### 设置超时
 http://localhost:8088/find/?timeout=1100
+
+#### 设置灰度比例
+http://localhost:8088/gray/?ratio=100
 
 #### 修改端口
 http://localhost:8081/ports?ports=8083,8094
