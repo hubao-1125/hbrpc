@@ -5,12 +5,15 @@ hbrpc:
   zkServer: localhost:2181
   zkRootPath: hbrpc
 
+
 app:
   id: hb
   namespace: public
   env: dev
   metas: "{dc: 'bj', gray: 'false', unit: 'B001'}"
 
+hbregistry:
+    servers: http://localhost:8484
 
 
 logging:

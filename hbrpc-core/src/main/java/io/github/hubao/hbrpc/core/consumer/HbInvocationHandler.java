@@ -5,8 +5,7 @@ import io.github.hubao.hbrpc.core.governance.SlidingTimeWindow;
 import io.github.hubao.hbrpc.core.meta.InstanceMeta;
 import io.github.hubao.hbrpc.core.util.MethodUtils;
 import io.github.hubao.hbrpc.core.util.TypeUtils;
-import io.github.hubao.hbrpc.core.util.http.HttpInvoker;
-import io.github.hubao.hbrpc.core.util.http.OkHttpInvoker;
+import io.github.hubao.hbrpc.core.consumer.http.OkHttpInvoker;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationHandler;
