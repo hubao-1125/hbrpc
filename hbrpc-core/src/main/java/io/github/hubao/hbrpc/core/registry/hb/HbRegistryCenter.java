@@ -105,7 +105,7 @@ public class HbRegistryCenter implements RegistryCenter {
 
     @Override
     public void subscribe(ServiceMeta service, ChangedListener listener) {
-        executor.scheduleWithFixedDelay(() -> {
+        consumerExecutor.scheduleWithFixedDelay(() -> {
             Long version = VERSIONS.getOrDefault(service.toPath(), -1L);
             Long newVersion = HttpInvoker.httpGet(servers + "/version?service=" + service.toPath(), Long.class);
             log.info(" ====> HbRegistry version= {}, newVersion = {}", version, newVersion);
