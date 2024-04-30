@@ -13,15 +13,12 @@ public class RoundRibonLoadBalancer<T> implements LoadBalancer<T> {
 
     @Override
     public T choose(List<T> providers) {
-
-        if (Objects.isNull(providers) || providers.size() == 0) {
+        if (Objects.isNull(providers) || providers.isEmpty()) {
             return null;
         }
-
         if (providers.size() == 1) {
             return providers.get(0);
         }
-
         return providers.get(index.getAndIncrement() % providers.size());
     }
 }

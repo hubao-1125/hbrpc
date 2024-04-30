@@ -2,6 +2,8 @@ package io.github.hubao.hbrpc.core.provider;
 
 import io.github.hubao.hbrpc.core.annotation.HbProvider;
 import io.github.hubao.hbrpc.core.api.RegistryCenter;
+import io.github.hubao.hbrpc.core.config.AppProperties;
+import io.github.hubao.hbrpc.core.config.ProviderProperties;
 import io.github.hubao.hbrpc.core.meta.InstanceMeta;
 import io.github.hubao.hbrpc.core.meta.ProviderMeta;
 import io.github.hubao.hbrpc.core.meta.ServiceMeta;
@@ -25,26 +27,20 @@ import java.util.*;
 @Slf4j
 public class ProviderBootstrap implements ApplicationContextAware {
 
-    ApplicationContext applicationContext;
-    RegistryCenter rc;
-
+    private ApplicationContext applicationContext;
+    private RegistryCenter rc;
+    private String port;
+    private AppProperties appProperties;
+    private ProviderProperties providerProperties;
     private MultiValueMap<String, ProviderMeta> skeleton = new LinkedMultiValueMap<>();
     private InstanceMeta instance;
 
-    @Value("${server.port}")
-    private String port;
-
-    @Value("${app.id}")
-    private String app;
-
-    @Value("${app.namespace}")
-    private String namespace;
-
-    @Value("${app.env}")
-    private String env;
-
-    @Value("#{${app.metas}}")
-    Map<String, String> metas;
+    public ProviderBootstrap(String port, AppProperties appProperties,
+                             ProviderProperties providerProperties) {
+        this.port = port;
+        this.appProperties = appProperties;
+        this.providerProperties = providerProperties;
+    }
 
     @SneakyThrows
     @PostConstruct  // init-method
@@ -58,8 +54,7 @@ public class ProviderBootstrap implements ApplicationContextAware {
     @SneakyThrows
     public void start() {
         String ip = InetAddress.getLocalHost().getHostAddress();
-        instance = InstanceMeta.http(ip, Integer.valueOf(port));
-        instance.getParameters().putAll(this.metas);
+        instance = InstanceMeta.http(ip, Integer.valueOf(port)).addParams(providerProperties.getMetas());
         rc.start();
         skeleton.keySet().forEach(this::registerService);
     }
@@ -72,13 +67,15 @@ public class ProviderBootstrap implements ApplicationContextAware {
 
     private void registerService(String service) {
         ServiceMeta serviceMeta = ServiceMeta.builder()
-                .app(app).namespace(namespace).env(env).name(service).build();
+                .app(appProperties.getId()).namespace(appProperties.getNamespace())
+                .env(appProperties.getEnv()).name(service).build();
         rc.register(serviceMeta, instance);
     }
 
     private void unregisterService(String service) {
         ServiceMeta serviceMeta = ServiceMeta.builder()
-                .app(app).namespace(namespace).env(env).name(service).build();
+                .app(appProperties.getId()).namespace(appProperties.getNamespace())
+                .env(appProperties.getEnv()).name(service).build();
         rc.unregister(serviceMeta, instance);
     }
 

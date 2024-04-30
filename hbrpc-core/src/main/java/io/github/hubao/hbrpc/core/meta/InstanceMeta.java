@@ -3,6 +3,7 @@ package io.github.hubao.hbrpc.core.meta;
 import com.alibaba.fastjson.JSON;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.util.HashMap;
@@ -16,6 +17,7 @@ import java.util.Map;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode(of = {"scheme", "host", "port", "context"})
 public class InstanceMeta {
 
     private String scheme;
@@ -37,12 +39,17 @@ public class InstanceMeta {
         return String.format("%s_%d", host, port);
     }
 
-    public static InstanceMeta http(String host, Integer port) {
-        return new InstanceMeta("http", host, port, "");
-    }
-
     public String toUrl() {
         return String.format("%s://%s:%d/%s", scheme, host, port, context);
+    }
+
+    public static InstanceMeta http(String host, Integer port) {
+        return new InstanceMeta("http", host, port, "hbrpc");
+    }
+
+    public InstanceMeta addParams(Map<String, String> params) {
+        this.getParameters().putAll(params);
+        return this;
     }
 
     public String toMetas() {

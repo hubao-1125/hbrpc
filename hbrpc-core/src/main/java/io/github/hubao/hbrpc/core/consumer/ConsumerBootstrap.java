@@ -73,7 +73,7 @@ public class ConsumerBootstrap implements ApplicationContextAware {
                     String serviceName = service.getCanonicalName();
                     Object consumer = stub.get(serviceName);
                     if (consumer == null) {
-                        consumer = createFromRegisry(service, context, rc);
+                        consumer = createFromRegistry(service, context, rc);
                         stub.put(serviceName, consumer);
                     }
                     f.setAccessible(true);
@@ -86,7 +86,7 @@ public class ConsumerBootstrap implements ApplicationContextAware {
         }
     }
 
-    private Object createFromRegisry(Class<?> service, RpcContext context, RegistryCenter rc) {
+    private Object createFromRegistry(Class<?> service, RpcContext context, RegistryCenter rc) {
         ServiceMeta serviceMeta = ServiceMeta.builder()
                 .app(app).namespace(namespace).env(env).name(service.getCanonicalName()).build();
         List<InstanceMeta> providers = rc.fetchAll(serviceMeta);

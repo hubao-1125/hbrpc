@@ -2,6 +2,8 @@ package io.github.hubao.hbrpc.core.cluster;
 
 import io.github.hubao.hbrpc.core.api.Router;
 import io.github.hubao.hbrpc.core.meta.InstanceMeta;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -13,6 +15,8 @@ import java.util.Random;
  * @author hubao
  * @Date: 2024/3/31 21:48
  */
+@Data
+@Slf4j
 public class GrayRouter implements Router<InstanceMeta> {
 
     private int grayRatio;
@@ -54,15 +58,20 @@ public class GrayRouter implements Router<InstanceMeta> {
             return providers;
         }
 
+        log.debug(" grayRouter grayNodes/normalNodes,grayRatio ===> {}/{},{}",
+                grayNodes.size(), normalNodes.size(), grayRatio);
+
         if (grayRatio <= 0) {
             return normalNodes;
         } else if (grayRatio >= 100) {
             return grayNodes;
         }
 
-        if (random.nextInt(100) < grayRatio) {
+        if(random.nextInt(100) < grayRatio) {
+            log.debug(" grayRouter grayNodes ===> {}", grayNodes);
             return grayNodes;
         } else {
+            log.debug(" grayRouter normalNodes ===> {}", normalNodes);
             return normalNodes;
         }
 

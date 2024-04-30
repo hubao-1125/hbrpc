@@ -19,6 +19,8 @@
 
     <properties>
         <java.version>17</java.version>
+        <apollo.version>2.2.0</apollo.version>
+        <spring.boot.version>3.2.3</spring.boot.version>
     </properties>
 
 

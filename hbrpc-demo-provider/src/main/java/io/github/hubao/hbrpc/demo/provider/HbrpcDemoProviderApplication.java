@@ -2,8 +2,6 @@ package io.github.hubao.hbrpc.demo.provider;
 
 import io.github.hubao.hbrpc.core.api.RpcRequest;
 import io.github.hubao.hbrpc.core.api.RpcResponse;
-import io.github.hubao.hbrpc.core.provider.ProviderBootstrap;
-import io.github.hubao.hbrpc.core.provider.ProviderConfig;
 import io.github.hubao.hbrpc.core.provider.ProviderInvoker;
 import io.github.hubao.hbrpc.demo.api.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
